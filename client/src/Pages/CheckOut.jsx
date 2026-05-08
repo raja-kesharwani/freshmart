@@ -6,6 +6,7 @@ import API from '../services/api'
 import { resolveProductImage } from '../utils/productImage'
 
 const PINCODE_REGEX = /^\d+$/
+const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID
 const sanitizePincode = (value) => String(value || '').replace(/\D/g, '')
 
 function Checkout() {
@@ -58,6 +59,16 @@ function Checkout() {
       return
     }
 
+    if (!RAZORPAY_KEY_ID) {
+      setError('Payment key is not configured')
+      return
+    }
+
+    if (!window.Razorpay) {
+      setError('Payment gateway is not available')
+      return
+    }
+
     setLoading(true)
     setError('')
 
@@ -90,7 +101,7 @@ function Checkout() {
 
       // Step 2 — Open Razorpay checkout
       const options = {
-        key: "rzp_test_SZRLIo68x3LcDG",
+        key: RAZORPAY_KEY_ID,
         amount: data.amount,
         currency: 'INR',
         name: 'FreshMart',

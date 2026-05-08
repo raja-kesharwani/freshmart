@@ -1,5 +1,19 @@
+# Dependencies
 node_modules/
+**/node_modules/
+
+# Environment files
 .env
+.env.*
+!.env.example
+!.env.*.example
+
+# Build output
 dist/
+dist-ssr/
 build/
+
+# Local/editor files
+.codex
+.codex/
 .DS_Store

@@ -8,7 +8,7 @@ const {
   createProduct,
   deleteProduct,
 } = require("../controllers/productControllers");
-const { protect } = require("../middleware/authMiddleware");
+const { protect, admin } = require("../middleware/authMiddleware");
 const { requireDatabase } = require("../middleware/dbMiddleware");
 
 // PUBLIC ROUTES
@@ -18,7 +18,7 @@ router.get("/category/:categoryId", requireDatabase, getProductsByCategory);
 router.get("/:id", requireDatabase, getProductById);
 
 // PROTECTED ROUTES (admin only)
-router.post("/", requireDatabase, protect, createProduct);
-router.delete("/:id", requireDatabase, protect, deleteProduct);
+router.post("/", requireDatabase, protect, admin, createProduct);
+router.delete("/:id", requireDatabase, protect, admin, deleteProduct);
 
 module.exports = router;

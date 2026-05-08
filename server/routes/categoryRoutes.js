@@ -1,9 +1,11 @@
 const express = require('express')
 const router = express.Router()
 const Category = require("../models/category");
+const { protect, admin } = require("../middleware/authMiddleware");
+const { requireDatabase } = require("../middleware/dbMiddleware");
 
 // GET all categories
-router.get('/', async (req, res) => {
+router.get('/', requireDatabase, async (req, res) => {
   try {
     const categories = await Category.find()
     res.status(200).json(categories)
@@ -13,7 +15,7 @@ router.get('/', async (req, res) => {
 })
 
 // CREATE category
-router.post('/', async (req, res) => {
+router.post('/', requireDatabase, protect, admin, async (req, res) => {
   try {
     const { name, image, description } = req.body
     const category = await Category.create({ name, image, description })
