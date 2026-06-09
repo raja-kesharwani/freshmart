@@ -6,8 +6,18 @@ import API from '../services/api'
 import { resolveProductImage } from '../utils/productImage'
 
 const PINCODE_REGEX = /^\d+$/
-const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID
+const RAZORPAY_KEY_ID = (import.meta.env.VITE_RAZORPAY_KEY_ID || '').trim()
 const sanitizePincode = (value) => String(value || '').replace(/\D/g, '')
+const isConfiguredRazorpayKey = (key) => key && key !== 'your_razorpay_key_id'
+
+const getRazorpayKeyId = async () => {
+  if (isConfiguredRazorpayKey(RAZORPAY_KEY_ID)) {
+    return RAZORPAY_KEY_ID
+  }
+
+  const { data } = await API.get('/payment/config')
+  return (data.keyId || '').trim()
+}
 
 function Checkout() {
   const { cartItems, cartTotal, clearCart, refreshCartStock } = useCart()
@@ -59,11 +69,6 @@ function Checkout() {
       return
     }
 
-    if (!RAZORPAY_KEY_ID) {
-      setError('Payment key is not configured')
-      return
-    }
-
     if (!window.Razorpay) {
       setError('Payment gateway is not available')
       return
@@ -73,6 +78,14 @@ function Checkout() {
     setError('')
 
     try {
+      const razorpayKeyId = await getRazorpayKeyId()
+
+      if (!isConfiguredRazorpayKey(razorpayKeyId)) {
+        setError('Payment key is not configured')
+        setLoading(false)
+        return
+      }
+
       const latestCartItems = await refreshCartStock()
       const orderItems = latestCartItems.length > 0 ? latestCartItems : cartItems
       const unavailableItem = orderItems.find((item) => Number.isFinite(Number(item.stock)) && Number(item.stock) <= 0)
@@ -101,7 +114,7 @@ function Checkout() {
 
       // Step 2 — Open Razorpay checkout
       const options = {
-        key: RAZORPAY_KEY_ID,
+        key: razorpayKeyId,
         amount: data.amount,
         currency: 'INR',
         name: 'FreshMart',

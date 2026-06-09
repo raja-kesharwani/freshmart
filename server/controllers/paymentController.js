@@ -1,14 +1,31 @@
 const Razorpay = require('razorpay')
 const crypto = require('crypto')
 
+const getRazorpayKeyId = () => (process.env.RAZORPAY_KEY_ID || '').trim()
+const getRazorpayKeySecret = () => (process.env.RAZORPAY_KEY_SECRET || '').trim()
+
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET
+  key_id: getRazorpayKeyId(),
+  key_secret: getRazorpayKeySecret()
 })
+
+const getPaymentConfig = (req, res) => {
+  const keyId = getRazorpayKeyId()
+
+  if (!keyId) {
+    return res.status(500).json({ message: 'Razorpay key is not configured' })
+  }
+
+  res.status(200).json({ keyId })
+}
 
 // Create order
 const createPaymentOrder = async (req, res) => {
   try {
+    if (!getRazorpayKeyId() || !getRazorpayKeySecret()) {
+      return res.status(500).json({ message: 'Razorpay credentials are not configured' })
+    }
+
     const { amount } = req.body
 
     const options = {
@@ -32,7 +49,7 @@ const verifyPayment = async (req, res) => {
 
     const sign = razorpay_order_id + '|' + razorpay_payment_id
     const expectedSign = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .createHmac('sha256', getRazorpayKeySecret())
       .update(sign)
       .digest('hex')
 
@@ -47,4 +64,4 @@ const verifyPayment = async (req, res) => {
   }
 }
 
-module.exports = { createPaymentOrder, verifyPayment }
+module.exports = { getPaymentConfig, createPaymentOrder, verifyPayment }
