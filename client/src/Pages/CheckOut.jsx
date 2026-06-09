@@ -6,6 +6,7 @@ import API from '../services/api'
 import { resolveProductImage } from '../utils/productImage'
 
 const PINCODE_REGEX = /^\d+$/
+const DEFAULT_RAZORPAY_KEY_ID = 'rzp_test_SZRLIo68x3LcDG'
 const RAZORPAY_KEY_ID = (import.meta.env.VITE_RAZORPAY_KEY_ID || '').trim()
 const sanitizePincode = (value) => String(value || '').replace(/\D/g, '')
 const isConfiguredRazorpayKey = (key) => key && key !== 'your_razorpay_key_id'
@@ -13,6 +14,10 @@ const isConfiguredRazorpayKey = (key) => key && key !== 'your_razorpay_key_id'
 const getRazorpayKeyId = async () => {
   if (isConfiguredRazorpayKey(RAZORPAY_KEY_ID)) {
     return RAZORPAY_KEY_ID
+  }
+
+  if (isConfiguredRazorpayKey(DEFAULT_RAZORPAY_KEY_ID)) {
+    return DEFAULT_RAZORPAY_KEY_ID
   }
 
   const { data } = await API.get('/payment/config')
